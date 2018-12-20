@@ -1,6 +1,6 @@
 <?php
 return [
-    'upload_type' => env('app.upload_type'),
+    'upload_type' => env('app.upload_type', 'local'),
     'cos'         => [
         //按实际填写region，不同地区请参考下表，如香港请填写 ap-hongkong
         'region'                => env('upload:cos.region'),

@@ -2,7 +2,7 @@
 thinkphp5.1 上传
 
 ## 安装
-> composer require php/tp51-upload
+> composer require phpcode/tp51-upload
 
 ## 使用
 ### Controller 接收
