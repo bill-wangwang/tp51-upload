@@ -1,0 +1,23 @@
+{
+    "name": "php/code",
+    "description": "no Description  is good Description!",
+    "type": "library",
+    "require": {
+        "topthink/framework": "5.1.*",
+        "aliyuncs/oss-sdk-php": "^2.3",
+        "qcloud/cos-sdk-v5": "^1.3",
+        "qiniu/php-sdk": "^7.2"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "tp51\\upload\\": "src/tp51/upload"
+        }
+    },
+    "authors": [
+        {
+            "name": "bill",
+            "email": "285303886@qq.com"
+        }
+    ]
+}
