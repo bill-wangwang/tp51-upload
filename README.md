@@ -1,5 +1,5 @@
 # tp51-upload
-thinkphp5.1 上传
+thinkphp5.1 聚合上传类
 
 ## 安装
 > composer require phpcode/tp51-upload
@@ -33,16 +33,18 @@ $res = [
 - 本地存储 
 
 ## 重要选项
-- upload_type 支持[ `oss` 、 `cos` 、 `qiniu` 、 `local` ]
-- sub_dir 子目录选项，如果不为空必须要以`/`结尾
+- `upload_type` 支持[ `oss` 、 `cos` 、 `qiniu` 、 `local` ]
+- `sub_dir` 子目录选项，如果不为空必须要以`/`结尾
 
 ## 功能
 - 灵活的配置（可以参考Upload.php的配置项`$_config`）
-- 允许限制图片的大小(`image_max_size`)
-- 允许限制图片的格式(`image_format`)
-- 允许设置图片需要的最小宽度(`min_width`)
-- 允许设置图片需要的最大宽度(`max_width`)
-- 允许设置图片需要的最小高度(`min_height`)
-- 允许设置图片需要的最大高度(`max_height`)
-- 允许设置异常错误码(`exception_code`)
+- 允许限制图片的大小(`image_max_size`)或`->setMaxSize()`
+- 允许限制图片的格式(`image_format`)或`->setFormat()`
+- 允许设置图片需要的最小宽度(`min_width`)或`->setMinWidth()`
+- 允许设置图片需要的最大宽度(`max_width`)或`->setMaxWidth()`
+- 允许设置图片需要的最小高度(`min_height`)或`->setMinHeight()`
+- 允许设置图片需要的最大高度(`max_height`)或`->setMaxHeight()`
+- 允许设置异常错误码(`exception_code`) 
 - 允许设置上传最大超时时间(`timeout`)
+- 允许设置附件的格式(`format`)或`->setFormat($format, 'format')`
+- 允许设置附件的最大大小(`max_size`)或`->setMaxSize($max_size, 'max_size')`

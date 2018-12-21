@@ -76,6 +76,56 @@ class Upload {
         }
     }
 
+    public function uploadImageByContent($content) {
+        //检查文件大小
+        $fileSize = strlen($content);
+        $this->_checkSize($fileSize);
+        //$extArray 为 getimagesizefromstring()[2] 对应的格式
+        $extArray = ['', 'gif', 'jpg', 'png', 'swf', 'psd', 'bmp', 'tiff', 'tiff', 'jpc', 'jp2', 'jpx', 'jb2', 'swc', 'iff', 'wbmp', 'xbm'];
+        $imageSize = getimagesizefromstring($content);
+        if(!is_array($imageSize) || !isset($imageSize[2])){
+            throw new \Exception("不是图片文件内容", $this->_config['exception_code']);
+        }
+        $fileExtIndex = $imageSize[2];
+        if($fileExtIndex<=0 || $fileExtIndex>16){
+            throw new \Exception("暂不支持的图片格式", $this->_config['exception_code']);
+        }
+        //获取文件后缀并转为小写，后缀不含.  hello.JPG 返回 jpg
+        $fileExt = $extArray[$fileExtIndex];
+        //检查文件格式
+        $this->_checkFormat($fileExt);
+        //检查图片宽高
+        $this->_checkImageWidthHeight($imageSize);
+        //获取文件key
+        $key = $this->_getSaveName($content, $fileExt);
+        try {
+            switch ($this->_config['upload_type']) {
+                case 'oss':
+                    $url = Oss::uploadByContent($this->_config['oss'], $content, $key);
+                    break;
+                case 'cos':
+                    $url = Cos::uploadByContent($this->_config['cos'], $content, $key);
+                    break;
+                case 'qiniu':
+                    $url = Qiniu::uploadByContent($this->_config['qiniu'], $content, $key);
+                    break;
+                case 'local':
+                    $url = Local::uploadByContent($this->_config['local'], $content, $key);
+                    break;
+                default:
+                    throw new \Exception("不支持的文件类型" . $this->_config['upload_type'], $this->_config['exception_code']);
+            }
+            return [
+                'size'   => $fileSize,
+                'url'    => $url,
+                'width'  => $imageSize[0],
+                'height' => $imageSize[1]
+            ];
+        } catch (\Exception $e) {
+            throw new \Exception($e->getMessage(), $this->_config['exception_code']);
+        }
+    }
+
 
     public function uploadRemoteImage() {
         if (isset($_FILES) && is_array($_FILES) && !empty($_FILES)) {
@@ -106,20 +156,19 @@ class Upload {
             $content = file_get_contents($fileName);
             //获取文件key
             $key = $this->_getSaveName($content, $fileExt);
-
             try {
                 switch ($this->_config['upload_type']) {
                     case 'oss':
-                        $url = Oss::uploadImage($this->_config['oss'], $fileName, $key);
+                        $url = Oss::uploadByFile($this->_config['oss'], $fileName, $key);
                         break;
                     case 'cos':
-                        $url = Cos::uploadImage($this->_config['cos'], $fileName, $key);
+                        $url = Cos::uploadByFile($this->_config['cos'], $fileName, $key);
                         break;
                     case 'qiniu':
-                         $url = Qiniu::uploadImage($this->_config['qiniu'], $fileName, $key);
+                        $url = Qiniu::uploadByFile($this->_config['qiniu'], $fileName, $key);
                         break;
                     case 'local':
-                        $url = Local::uploadImage($this->_config['local'], $fileName, $key);
+                        $url = Local::uploadByFile($this->_config['local'], $fileName, $key);
                         break;
                     default:
                         throw new \Exception("不支持的文件类型" . $this->_config['upload_type'], $this->_config['exception_code']);
@@ -150,17 +199,17 @@ class Upload {
     }
 
     public function setUploadType($value) {
-        $this->_config['upload_type'] = $value;
+        $this->_config['upload_type'] = strtolower($value);
         //设置完顺便检查下类型是否允许
         $this->_getUploadType();
     }
 
-    public function setMaxSize($value) {
-        $this->_config['max_size'] = $value;
+    public function setMaxSize($value, $key = 'image_format') {
+        $this->_config[$key] = $value;
     }
 
-    public function setFormat($value) {
-        $this->_config['format'] = $value;
+    public function setFormat($value, $key = 'image_format') {
+        $this->_config[$key] = $value;
     }
 
     public function setMinWidth($value) {
@@ -178,6 +227,5 @@ class Upload {
     public function setMaxHeight($value) {
         $this->_config['max_height'] = $value;
     }
-
 
 }
