@@ -4,6 +4,10 @@ thinkphp5.1 聚合上传类
 ## 安装
 > composer require phpcode/tp51-upload
 
+## 配置
+- 复制`examples/config/upload.php`到项目config配置目录下（`config/upload.php`）
+- 修改`.env`文件（可参考文件`examples/.env.example`和`upload.php`）
+
 ## 使用
 ### Controller 接收
 ```
@@ -12,19 +16,13 @@ $upload = new Upload();
 $res = $upload->uploadRemoteImage();
 /*
 $res = [
-  'size'=> 图片的大小单位为字节
+  'size'=> 图片的大小，单位为字节
   'url' => 图片的URL地址
   'width' => 图片的宽
   'height' => 图片的高
 ]
 */
 ```
-
-
-
-## 配置
-- 复制`examples/config/upload.php`到项目config目录下
-- 修改`.env`文件（可参考文件`examples/.env.example`和`upload.php`）
 
 ## 支持
 - 阿里云的oss存储
@@ -48,3 +46,29 @@ $res = [
 - 允许设置上传最大超时时间(`timeout`)
 - 允许设置附件的格式(`format`)或`->setFormat($format, 'format')`
 - 允许设置附件的最大大小(`max_size`)或`->setMaxSize($max_size, 'max_size')`
+
+## 开放方法
+
+### 图片部分
+
+#### 常用
+- `uploadRemoteImage()` 上传远程表单图片，常见于web
+- `uploadImageByContent()` 上传内存中的图片，常见于app和微信小程序的接口
+#### 进阶
+- `setUploadType()` 设置上传类型 支持[ `oss` 、 `cos` 、 `qiniu` 、 `local` ]
+- `setMaxSize()` 设置允许上传的图片的最大大小，单位为`字节`
+- `setFormat()` 设置允许的图片格式，多个用`|`分割
+- `setMinWidth()`设置图片需要的`最小宽度`，单位为`像素` 默认为`0`不限制
+- `setMaxWidth()`设置图片需要的`最大宽度`，单位为`像素` 默认为`0`不限制
+- `setMinHeight()`设置图片需要的`最小高度`，单位为`像素` 默认为`0`不限制
+- `setMaxHeight()`设置图片需要的`最大高度`，单位为`像素` 默认为`0`不限制
+
+### 附件部分
+
+#### 常用
+- `uploadFileByContent()`上传远程表单附件，常见于web
+- `uploadRemoteFile()`上传内存中的风渐渐，常见于app和微信小程序的接口
+#### 进阶
+- `setUploadType()` 设置上传类型 支持[ `oss` 、 `cos` 、 `qiniu` 、 `local` ]
+- `setMaxSize($max_size, 'max_size')` 设置允许上传的附件的最大大小，单位为字节
+- `setFormat($format, 'format')` 设置允许的附件格式，多个用`|`分割

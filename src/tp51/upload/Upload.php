@@ -76,15 +76,30 @@ class Upload {
         }
     }
 
+    /**
+     * 根据文件内容和后缀生成文件名（不含上传目录）
+     * @param $content
+     * @param $ext
+     * @return string
+     */
+    private function _getSaveName($content, $ext) {
+        $hash = md5($content);
+        return substr($hash, 0, 2) . '/' . substr($hash, 2, 2) . '/' . $hash . '.' . $ext;
+    }
+
     public function uploadImageByContent($content) {
         //检查文件大小
         $fileSize = strlen($content);
         $this->_checkSize($fileSize);
         //$extArray 为 getimagesizefromstring()[2] 对应的格式
         $extArray = ['', 'gif', 'jpg', 'png', 'swf', 'psd', 'bmp', 'tiff', 'tiff', 'jpc', 'jp2', 'jpx', 'jb2', 'swc', 'iff', 'wbmp', 'xbm'];
-        $imageSize = getimagesizefromstring($content);
-        if(!is_array($imageSize) || !isset($imageSize[2])){
+        try{
+            $imageSize = getimagesizefromstring($content);
+        } catch (\Exception $e){
             throw new \Exception("不是图片文件内容", $this->_config['exception_code']);
+        }
+        if(!is_array($imageSize) || !isset($imageSize[2])){
+            throw new \Exception("不是图片文件内容.", $this->_config['exception_code']);
         }
         $fileExtIndex = $imageSize[2];
         if($fileExtIndex<=0 || $fileExtIndex>16){
@@ -126,6 +141,42 @@ class Upload {
         }
     }
 
+    public function uploadFileByContent($content, $fileName) {
+        //检查文件大小
+        $fileSize = strlen($content);
+        $this->_checkSize($fileSize, 'max_size');
+        //获取文件后缀并转为小写，后缀不含.  hello.JPG 返回 jpg
+        $fileExt = $fileExt = pathinfo($fileName, PATHINFO_EXTENSION);;
+        //检查文件格式
+        $this->_checkFormat($fileExt,'format');
+        //获取文件key
+        $key = $this->_getSaveName($content, $fileExt);
+        try {
+            switch ($this->_config['upload_type']) {
+                case 'oss':
+                    $url = Oss::uploadByContent($this->_config['oss'], $content, $key);
+                    break;
+                case 'cos':
+                    $url = Cos::uploadByContent($this->_config['cos'], $content, $key);
+                    break;
+                case 'qiniu':
+                    $url = Qiniu::uploadByContent($this->_config['qiniu'], $content, $key);
+                    break;
+                case 'local':
+                    $url = Local::uploadByContent($this->_config['local'], $content, $key);
+                    break;
+                default:
+                    throw new \Exception("不支持的文件类型" . $this->_config['upload_type'], $this->_config['exception_code']);
+            }
+            return [
+                'size'   => $fileSize,
+                'url'    => $url
+            ];
+        } catch (\Exception $e) {
+            throw new \Exception($e->getMessage(), $this->_config['exception_code']);
+        }
+    }
+
 
     public function uploadRemoteImage() {
         if (isset($_FILES) && is_array($_FILES) && !empty($_FILES)) {
@@ -146,10 +197,15 @@ class Upload {
             $fileSize = filesize($fileName);
             $this->_checkSize($fileSize);
             //获取图片宽高
-            $imageSize = getimagesize($fileName);
+            try{
+                $imageSize = getimagesize($fileName);
+            }catch (\Exception $e){
+                throw new \Exception("非图片文件.", $this->_config['exception_code']);
+            }
             if (!$imageSize) {
                 throw new \Exception("非图片文件", $this->_config['exception_code']);
             }
+
             //检查图片宽高
             $this->_checkImageWidthHeight($imageSize);
             //获取文件内容
@@ -187,16 +243,57 @@ class Upload {
         }
     }
 
-    /**
-     * 根据文件内容和后缀生成文件名（不含上传目录）
-     * @param $content
-     * @param $ext
-     * @return string
-     */
-    private function _getSaveName($content, $ext) {
-        $hash = md5($content);
-        return substr($hash, 0, 2) . '/' . substr($hash, 2, 2) . '/' . $hash . '.' . $ext;
+    public function uploadRemoteFile() {
+        if (isset($_FILES) && is_array($_FILES) && !empty($_FILES)) {
+            $fileId = '';
+            foreach ($_FILES as $key => $value) {
+                $fileId = $key;
+                continue;
+            }
+            $file = request()->file($fileId);
+            $info = $file->getInfo();
+            //获取临时文件名
+            $fileName = $info['tmp_name'];
+            //获取文件后缀并转为小写，后缀不含.  hello.JPG 返回 jpg
+            $fileExt = pathinfo($info['name'], PATHINFO_EXTENSION);
+            //检查文件格式
+            $this->_checkFormat($fileExt, 'format');
+            //检查文件大小
+            $fileSize = filesize($fileName);
+            $this->_checkSize($fileSize, 'max_size');
+            //获取文件内容
+            $content = file_get_contents($fileName);
+            //获取文件key
+            $key = $this->_getSaveName($content, $fileExt);
+            try {
+                switch ($this->_config['upload_type']) {
+                    case 'oss':
+                        $url = Oss::uploadByFile($this->_config['oss'], $fileName, $key);
+                        break;
+                    case 'cos':
+                        $url = Cos::uploadByFile($this->_config['cos'], $fileName, $key);
+                        break;
+                    case 'qiniu':
+                        $url = Qiniu::uploadByFile($this->_config['qiniu'], $fileName, $key);
+                        break;
+                    case 'local':
+                        $url = Local::uploadByFile($this->_config['local'], $fileName, $key);
+                        break;
+                    default:
+                        throw new \Exception("不支持的文件类型" . $this->_config['upload_type'], $this->_config['exception_code']);
+                }
+                return [
+                    'size'   => $fileSize,
+                    'url'    => $url
+                ];
+            } catch (\Exception $e) {
+                throw new \Exception($e->getMessage(), $this->_config['exception_code']);
+            }
+        } else {
+            throw new \Exception("没有上传文件信息", $this->_config['exception_code']);
+        }
     }
+
 
     public function setUploadType($value) {
         $this->_config['upload_type'] = strtolower($value);
@@ -204,7 +301,7 @@ class Upload {
         $this->_getUploadType();
     }
 
-    public function setMaxSize($value, $key = 'image_format') {
+    public function setMaxSize($value, $key = 'image_max_size') {
         $this->_config[$key] = $value;
     }
 
