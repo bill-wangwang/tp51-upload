@@ -16,6 +16,7 @@ $upload = new Upload();
 $res = $upload->uploadRemoteImage();
 /*
 $res = [
+  'name'=> 原始图片文件名
   'size'=> 图片的大小，单位为字节
   'url' => 图片的URL地址
   'width' => 图片的宽

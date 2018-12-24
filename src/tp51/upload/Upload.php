@@ -10,7 +10,7 @@ use tp51\upload\Driver\Local;
 class Upload {
 
     //版本号
-    private $version = '1.0.0';
+    private $version = '1.0.1';
 
     private $_config = [
         'timeout'        => 180, //超时时间，单位秒
@@ -94,7 +94,7 @@ class Upload {
      * 获取版本号
      * @return string 版本号
      */
-    public function getVersion(){
+    public function getVersion() {
         return $this->version;
     }
 
@@ -109,17 +109,35 @@ class Upload {
         $fileSize = strlen($content);
         $this->_checkSize($fileSize);
         //$extArray 为 getimagesizefromstring()[2] 对应的格式
-        $extArray = ['', 'gif', 'jpg', 'png', 'swf', 'psd', 'bmp', 'tiff', 'tiff', 'jpc', 'jp2', 'jpx', 'jb2', 'swc', 'iff', 'wbmp', 'xbm'];
-        try{
+        $extArray = [
+            '',
+            'gif',
+            'jpg',
+            'png',
+            'swf',
+            'psd',
+            'bmp',
+            'tiff',
+            'tiff',
+            'jpc',
+            'jp2',
+            'jpx',
+            'jb2',
+            'swc',
+            'iff',
+            'wbmp',
+            'xbm'
+        ];
+        try {
             $imageSize = getimagesizefromstring($content);
-        } catch (\Exception $e){
+        } catch (\Exception $e) {
             throw new \Exception("不是图片文件内容", $this->_config['exception_code']);
         }
-        if(!is_array($imageSize) || !isset($imageSize[2])){
+        if (!is_array($imageSize) || !isset($imageSize[2])) {
             throw new \Exception("不是图片文件内容.", $this->_config['exception_code']);
         }
         $fileExtIndex = $imageSize[2];
-        if($fileExtIndex<=0 || $fileExtIndex>16){
+        if ($fileExtIndex <= 0 || $fileExtIndex > 16) {
             throw new \Exception("暂不支持的图片格式", $this->_config['exception_code']);
         }
         //获取文件后缀并转为小写，后缀不含.  hello.JPG 返回 jpg
@@ -172,7 +190,7 @@ class Upload {
         //获取文件后缀并转为小写，后缀不含.  hello.JPG 返回 jpg
         $fileExt = $fileExt = pathinfo($fileName, PATHINFO_EXTENSION);;
         //检查文件格式
-        $this->_checkFormat($fileExt,'format');
+        $this->_checkFormat($fileExt, 'format');
         //获取文件key
         $key = $this->_getSaveName($content, $fileExt);
         try {
@@ -193,8 +211,8 @@ class Upload {
                     throw new \Exception("不支持的文件类型" . $this->_config['upload_type'], $this->_config['exception_code']);
             }
             return [
-                'size'   => $fileSize,
-                'url'    => $url
+                'size' => $fileSize,
+                'url'  => $url
             ];
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage(), $this->_config['exception_code']);
@@ -203,7 +221,7 @@ class Upload {
 
     /**
      * 上传远程图片(Form上传图片)
-     * @return array ['size'=>图片字节大小, 'url'=>图片访问地址, 'width'=>图片宽度, 'height'=>图片高度]
+     * @return array ['name'=>原始文件名, 'size'=>图片字节大小, 'url'=>图片访问地址, 'width'=>图片宽度, 'height'=>图片高度]
      * @throws \Exception
      */
     public function uploadRemoteImage() {
@@ -215,6 +233,8 @@ class Upload {
             }
             $file = request()->file($fileId);
             $info = $file->getInfo();
+            //原始文件名
+            $name = $info['name'];
             //获取临时文件名
             $fileName = $info['tmp_name'];
             //获取文件后缀并转为小写，后缀不含.  hello.JPG 返回 jpg
@@ -222,12 +242,12 @@ class Upload {
             //检查文件格式
             $this->_checkFormat($fileExt);
             //检查文件大小
-            $fileSize = filesize($fileName);
+            $fileSize = $info['size'];
             $this->_checkSize($fileSize);
             //获取图片宽高
-            try{
+            try {
                 $imageSize = getimagesize($fileName);
-            }catch (\Exception $e){
+            } catch (\Exception $e) {
                 throw new \Exception("非图片文件.", $this->_config['exception_code']);
             }
             if (!$imageSize) {
@@ -258,6 +278,7 @@ class Upload {
                         throw new \Exception("不支持的文件类型" . $this->_config['upload_type'], $this->_config['exception_code']);
                 }
                 return [
+                    'name'   => $name,
                     'size'   => $fileSize,
                     'url'    => $url,
                     'width'  => $imageSize[0],
@@ -285,6 +306,8 @@ class Upload {
             }
             $file = request()->file($fileId);
             $info = $file->getInfo();
+            //原始文件名
+            $name = $info['name'];
             //获取临时文件名
             $fileName = $info['tmp_name'];
             //获取文件后缀并转为小写，后缀不含.  hello.JPG 返回 jpg
@@ -292,7 +315,7 @@ class Upload {
             //检查文件格式
             $this->_checkFormat($fileExt, 'format');
             //检查文件大小
-            $fileSize = filesize($fileName);
+            $fileSize = $info['size'];
             $this->_checkSize($fileSize, 'max_size');
             //获取文件内容
             $content = file_get_contents($fileName);
@@ -316,8 +339,9 @@ class Upload {
                         throw new \Exception("不支持的文件类型" . $this->_config['upload_type'], $this->_config['exception_code']);
                 }
                 return [
-                    'size'   => $fileSize,
-                    'url'    => $url
+                    'name' => $name,
+                    'size' => $fileSize,
+                    'url'  => $url
                 ];
             } catch (\Exception $e) {
                 throw new \Exception($e->getMessage(), $this->_config['exception_code']);
