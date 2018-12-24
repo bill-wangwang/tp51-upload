@@ -9,6 +9,9 @@ use tp51\upload\Driver\Local;
 
 class Upload {
 
+    //版本号
+    private $version = '1.0.0';
+
     private $_config = [
         'timeout'        => 180, //超时时间，单位秒
         'exception_code' => 8001, //异常错误代码
@@ -87,6 +90,20 @@ class Upload {
         return substr($hash, 0, 2) . '/' . substr($hash, 2, 2) . '/' . $hash . '.' . $ext;
     }
 
+    /**
+     * 获取版本号
+     * @return string 版本号
+     */
+    public function getVersion(){
+        return $this->version;
+    }
+
+    /**
+     * 上传内存中的图片
+     * @param $content string 内存中的图片二进制内容
+     * @return array ['size'=>图片字节大小, 'url'=>图片访问地址, 'width'=>图片宽度, 'height'=>图片高度]
+     * @throws \Exception
+     */
     public function uploadImageByContent($content) {
         //检查文件大小
         $fileSize = strlen($content);
@@ -141,6 +158,13 @@ class Upload {
         }
     }
 
+    /**
+     * 上传内存中的文件
+     * @param $content string 内存中的附件二进制
+     * @param $fileName string 原始文件名（用来获取文件后缀）
+     * @return array ['size'=>附件字节大小, 'url'=>附件访问地址]
+     * @throws \Exception
+     */
     public function uploadFileByContent($content, $fileName) {
         //检查文件大小
         $fileSize = strlen($content);
@@ -177,7 +201,11 @@ class Upload {
         }
     }
 
-
+    /**
+     * 上传远程图片(Form上传图片)
+     * @return array ['size'=>图片字节大小, 'url'=>图片访问地址, 'width'=>图片宽度, 'height'=>图片高度]
+     * @throws \Exception
+     */
     public function uploadRemoteImage() {
         if (isset($_FILES) && is_array($_FILES) && !empty($_FILES)) {
             $fileId = '';
@@ -243,6 +271,11 @@ class Upload {
         }
     }
 
+    /**
+     * 上传远程附件（Form上传附件）
+     * @return array ['size'=>附件字节大小, 'url'=附件访问地址]
+     * @throws \Exception
+     */
     public function uploadRemoteFile() {
         if (isset($_FILES) && is_array($_FILES) && !empty($_FILES)) {
             $fileId = '';
@@ -294,33 +327,63 @@ class Upload {
         }
     }
 
-
+    /**
+     * 设置上传类型 ,可以和配置文件中的不同
+     * @param $value string [oss | cos | qiniu | local]
+     * @throws \Exception
+     */
     public function setUploadType($value) {
         $this->_config['upload_type'] = strtolower($value);
         //设置完顺便检查下类型是否允许
         $this->_getUploadType();
     }
 
+    /**
+     * 设置允许上传的最大的图片/附件的字节数大小，作用于配置文件的 image_max_size / max_size
+     * @param $value int 允许上传的最大字节数（受php.ini和nginx配置的影响）
+     * @param string $key max_size | image_max_size ，默认为 image_max_size 即默认为设置图片大小
+     */
     public function setMaxSize($value, $key = 'image_max_size') {
         $this->_config[$key] = $value;
     }
 
+    /**
+     * 设置允许上传图片/附件的格式，
+     * @param $value string 图片/附件的格式，多个用|分割开，格式不需要带上.
+     * @param string $key image_format | format ，默认为 image_format 即默认为设置图片格式
+     */
     public function setFormat($value, $key = 'image_format') {
         $this->_config[$key] = $value;
     }
 
+    /**
+     * 设置图片需要最小的宽度（上传图片时有效）
+     * @param $value int 图片需要最小的宽度
+     */
     public function setMinWidth($value) {
         $this->_config['min_width'] = $value;
     }
 
+    /**
+     * 设置图片需要最大的宽度（上传图片时有效）
+     * @param $value int 图片需要最大的宽度
+     */
     public function setMaxWidth($value) {
         $this->_config['max_width'] = $value;
     }
 
+    /**
+     * 设置图片需要最小的高度（上传图片时有效）
+     * @param $value int 图片需要最小的高度
+     */
     public function setMinHeight($value) {
         $this->_config['min_height'] = $value;
     }
 
+    /**
+     * 设置图片需要最大的高度（上传图片时有效）
+     * @param $value int 图片需要最大的高度
+     */
     public function setMaxHeight($value) {
         $this->_config['max_height'] = $value;
     }
