@@ -17,7 +17,7 @@ $res = $upload->uploadRemoteImage();
 /*
 $res = [
   'base_name' => 原始图片文件名(不含后缀)
-  'name'=> 原始图片文件名(不后缀)
+  'name'=> 原始图片文件名(含后缀)
   'size'=> 图片的大小，单位为字节
   'url' => 图片的URL地址
   'width' => 图片的宽
@@ -37,7 +37,7 @@ $res = [
 - `sub_dir` 子目录选项，如果不为空必须要以`/`结尾
 
 ## 功能
-- 灵活的配置（可以参考Upload.php的配置项`$_config`）
+- 灵活的配置（可以参考`Upload.php`的配置项`$_config`）
 - 允许限制图片的大小(`image_max_size`)或`->setMaxSize()`
 - 允许限制图片的格式(`image_format`)或`->setFormat()`
 - 允许设置图片需要的最小宽度(`min_width`)或`->setMinWidth()`
