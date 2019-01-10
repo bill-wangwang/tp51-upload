@@ -221,7 +221,7 @@ class Upload {
 
     /**
      * 上传远程图片(Form上传图片)
-     * @return array ['name'=>原始文件名, 'size'=>图片字节大小, 'url'=>图片访问地址, 'width'=>图片宽度, 'height'=>图片高度]
+     * @return array ['base_name'=>原始文件名(不含后缀), 'name'=>原始文件名(含后缀), 'size'=>图片字节大小, 'url'=>图片访问地址, 'width'=>图片宽度, 'height'=>图片高度]
      * @throws \Exception
      */
     public function uploadRemoteImage() {
@@ -278,6 +278,7 @@ class Upload {
                         throw new \Exception("不支持的文件类型" . $this->_config['upload_type'], $this->_config['exception_code']);
                 }
                 return [
+                    'base_name' => pathinfo($name, PATHINFO_FILENAME),
                     'name'   => $name,
                     'size'   => $fileSize,
                     'url'    => $url,
@@ -339,9 +340,10 @@ class Upload {
                         throw new \Exception("不支持的文件类型" . $this->_config['upload_type'], $this->_config['exception_code']);
                 }
                 return [
-                    'name' => $name,
-                    'size' => $fileSize,
-                    'url'  => $url
+                    'base_name' => pathinfo($name, PATHINFO_FILENAME),
+                    'name'      => $name,
+                    'size'      => $fileSize,
+                    'url'       => $url
                 ];
             } catch (\Exception $e) {
                 throw new \Exception($e->getMessage(), $this->_config['exception_code']);
